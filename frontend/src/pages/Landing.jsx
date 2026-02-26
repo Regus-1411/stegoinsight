@@ -38,24 +38,23 @@ const steps = [
 const Landing = () => {
   return (
     <SiteLayout>
-      <div className="relative min-h-screen gradient-hero">
-        {/* Hero */}
-        <section className="relative overflow-hidden">
-          <div className="container mx-auto px-6 py-20 md:py-28">
+      {/* Hero */}
+      <section className="gradient-hero relative overflow-hidden">
+        <div className="container mx-auto px-6 py-20 md:py-28">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7 }}
             >
-              <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-6 border border-primary/20 bg-primary/5 backdrop-blur-sm">
+              <div className="inline-flex items-center gap-2 glass rounded-full px-4 py-1.5 mb-6">
                 <Shield className="w-4 h-4 text-primary" />
                 <span className="text-xs font-medium text-primary">AI-Powered Stegnography Detection</span>
               </div>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight mb-6">
                 AI-Powered Prediction
                 <br />of&ensp;
-                <span style={{ color: "#00c8ff", textShadow: "0 0 20px rgba(0, 200, 255, 0.6), 0 0 40px rgba(0, 200, 255, 0.3)", background: "transparent" }}>Steganographic</span>
+                <span className="text-gradient-cyan">Steganographic</span>
                 <br />
                 Images Instantly
               </h1>
@@ -76,16 +75,13 @@ const Landing = () => {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.7, delay: 0.2 }}
-              whileHover={{ scale: 1.05, y: -8 }}
               className="relative"
             >
-              <div className="rounded-2xl overflow-hidden border border-border glow-cyan transition-all duration-300">
-                <motion.img
+              <div className="rounded-2xl overflow-hidden border border-border glow-cyan">
+                <img
                   src={heroImage}
                   alt="StegoInsight AI cybersecurity dashboard"
                   className="w-full"
-                  whileHover={{ scale: 1.08 }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
                 />
               </div>
             </motion.div>
@@ -106,7 +102,7 @@ const Landing = () => {
             <p className="text-muted-foreground max-w-xl mx-auto">Three simple steps to uncover hidden threats in your files.</p>
           </motion.div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {steps.map((step, i) => (
               <motion.div
                 key={step.num}
@@ -184,7 +180,6 @@ const Landing = () => {
           </motion.div>
         </div>
       </section>
-      </div>
     </SiteLayout>
   );
 };
