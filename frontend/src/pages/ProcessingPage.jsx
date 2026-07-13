@@ -1,49 +1,72 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Shield, Scan, FileSearch, CheckCircle } from "lucide-react";
 import SiteLayout from "@/components/layout/SiteLayout";
+import { useAnalysis } from "@/context/AnalysisContext";
+import { analyzeFile } from "@/lib/api";
 
 const stages = [
-  { icon: FileSearch, label: "Parsing file structure...", duration: 2000 },
-  { icon: Scan, label: "Running steganalysis models...", duration: 3000 },
-  { icon: Shield, label: "Generating risk assessment...", duration: 2000 },
-  { icon: CheckCircle, label: "Analysis complete!", duration: 1000 },
+  { icon: FileSearch, label: "Parsing file structure..." },
+  { icon: Scan, label: "Running steganalysis models..." },
+  { icon: Shield, label: "Generating risk assessment..." },
+  { icon: CheckCircle, label: "Analysis complete!" },
 ];
 
 const ProcessingPage = () => {
   const navigate = useNavigate();
+  const { pendingFiles, setResults, setIsAnalyzing, setError } = useAnalysis();
   const [currentStage, setCurrentStage] = useState(0);
   const [progress, setProgress] = useState(0);
+  const startedRef = useRef(false);
 
   useEffect(() => {
-    const totalDuration = stages.reduce((sum, s) => sum + s.duration, 0);
-    let elapsed = 0;
+    if (!pendingFiles || pendingFiles.length === 0) {
+      navigate("/upload", { replace: true });
+      return;
+    }
 
-    const interval = setInterval(() => {
-      elapsed += 50;
-      setProgress(Math.min((elapsed / totalDuration) * 100, 100));
+    if (startedRef.current) return;
+    startedRef.current = true;
 
-      let cumulative = 0;
-      for (let i = 0; i < stages.length; i++) {
-        cumulative += stages[i].duration;
-        if (elapsed < cumulative) {
-          setCurrentStage(i);
-          break;
+    const runAnalysis = async () => {
+      setIsAnalyzing(true);
+      setError(null);
+      setCurrentStage(0);
+      setProgress(5);
+
+      try {
+        const allResults = [];
+        const totalFiles = pendingFiles.length;
+
+        for (let i = 0; i < totalFiles; i++) {
+          setCurrentStage(0);
+          setProgress(Math.round(((i * 3) / (totalFiles * 3)) * 90) + 5);
+
+          setCurrentStage(1);
+          const result = await analyzeFile(pendingFiles[i]);
+          allResults.push(result);
+
+          setCurrentStage(2);
+          setProgress(Math.round((((i + 1) * 3) / (totalFiles * 3)) * 90) + 5);
         }
-        if (i === stages.length - 1) {
-          setCurrentStage(i);
-        }
-      }
 
-      if (elapsed >= totalDuration) {
-        clearInterval(interval);
+        setCurrentStage(3);
+        setProgress(100);
+        setResults(allResults);
+        setIsAnalyzing(false);
         setTimeout(() => navigate("/dashboard"), 800);
+      } catch (err) {
+        setError(err.message || "Analysis failed");
+        setIsAnalyzing(false);
+        setCurrentStage(3);
+        setProgress(100);
+        setTimeout(() => navigate("/dashboard"), 1200);
       }
-    }, 50);
+    };
 
-    return () => clearInterval(interval);
-  }, [navigate]);
+    runAnalysis();
+  }, [pendingFiles, navigate, setResults, setIsAnalyzing, setError]);
 
   return (
     <SiteLayout>
@@ -53,7 +76,6 @@ const ProcessingPage = () => {
           animate={{ opacity: 1, scale: 1 }}
           className="text-center max-w-md"
         >
-          {/* Scan animation */}
           <div className="relative w-32 h-32 mx-auto mb-8">
             <div className="absolute inset-0 rounded-2xl border-2 border-primary/30 overflow-hidden">
               <div className="absolute inset-0 bg-primary/5" />
@@ -70,7 +92,6 @@ const ProcessingPage = () => {
 
           <h2 className="text-2xl font-bold mb-6">Analyzing Your File</h2>
 
-          {/* Stages */}
           <div className="space-y-3 mb-8">
             {stages.map((stage, i) => {
               const StageIcon = stage.icon;
@@ -80,9 +101,8 @@ const ProcessingPage = () => {
               return (
                 <div
                   key={i}
-                  className={`flex items-center gap-3 text-sm transition-all ${
-                    isDone ? "text-primary" : isActive ? "text-foreground" : "text-muted-foreground/50"
-                  }`}
+                  className={`flex items-center gap-3 text-sm transition-all ${isDone ? "text-primary" : isActive ? "text-foreground" : "text-muted-foreground/50"
+                    }`}
                 >
                   <StageIcon className={`w-4 h-4 shrink-0 ${isActive ? "animate-pulse" : ""}`} />
                   <span>{stage.label}</span>
@@ -92,12 +112,11 @@ const ProcessingPage = () => {
             })}
           </div>
 
-          {/* Progress bar */}
           <div className="w-full h-2 rounded-full bg-secondary overflow-hidden">
             <motion.div
               className="h-full gradient-cyan rounded-full"
-              style={{ width: `${progress}%` }}
-              transition={{ duration: 0.1 }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.3 }}
             />
           </div>
           <p className="text-muted-foreground text-xs mt-2">{Math.round(progress)}% complete</p>

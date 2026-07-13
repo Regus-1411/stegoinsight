@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Upload, FileImage, FileAudio, FileText, X, Shield } from "lucide-react";
 import SiteLayout from "@/components/layout/SiteLayout";
+import { useAnalysis } from "@/context/AnalysisContext";
 
 const acceptedTypes = [
   { icon: FileImage, label: "Images", formats: "PNG, JPG, BMP, TIFF" },
@@ -13,6 +14,7 @@ const acceptedTypes = [
 
 const UploadPage = () => {
   const navigate = useNavigate();
+  const { setPendingFiles, reset } = useAnalysis();
   const [files, setFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -35,6 +37,8 @@ const UploadPage = () => {
 
   const handleAnalyze = () => {
     if (files.length > 0) {
+      reset();
+      setPendingFiles(files);
       navigate("/processing");
     }
   };
